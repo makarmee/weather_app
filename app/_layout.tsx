@@ -1,7 +1,7 @@
-import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
 import "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import HomeScreen from "./HomeScreen";
 import "./global.css";
 
 export default function RootLayout() {
@@ -14,12 +14,13 @@ export default function RootLayout() {
   //   return null;
   // }
 
+
   return (
-    <SafeAreaView style={{ flex: 1 }} className="bg-black">
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="light" />
-    </SafeAreaView>
+    // <SafeAreaView className="flex-1 bg-transparent">
+    <View className="flex-1">
+      <StatusBar style="light" translucent/>
+      <HomeScreen/>
+    </View>
+    // {/* </SafeAreaView> */}
   );
 }

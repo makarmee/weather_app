@@ -18,6 +18,7 @@ import {
 } from "react-native-heroicons/outline";
 import { MapPinIcon } from "react-native-heroicons/solid";
 import * as Progress from 'react-native-progress';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 export default function HomeScreen() {
@@ -50,7 +51,6 @@ export default function HomeScreen() {
   }
 
   useEffect(()=>{fetchMyWeatherData()},[])
-
   async function fetchMyWeatherData (){
     let myCity=await getData('city');
     let city='Herat';
@@ -65,13 +65,13 @@ export default function HomeScreen() {
     })
   }
 
-
   const handleTextDebounce=useCallback(debounce(handleSearch,1200),[])
-
   const{current,location}=weather;
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <View className="flex-1 relative">
+    <View className="flex-1 relative" >
       <Image
         blurRadius={70}
         source={require("@/assets/images/bg.png")}
@@ -79,14 +79,14 @@ export default function HomeScreen() {
       />
       {loading?(
         <View className="flex-1 flex-row justify-center items-center">
-          <Progress.CircleSnail thickness={10} size={40} color='#0bb3b2'/>
+          <Progress.CircleSnail thickness={10} size={120} color='#0bb3b2'/>
         </View>
       ):(
 
       <SafeAreaView className="flex flex-1">
-        <View style={{ height: "7%" }} className="mx-4 relative z-50">
+        <View style={{ height: "7%",marginTop:52 }} className="mx-4 relative z-50">
           <View
-            className={`flex-row justify-end items-center rounded-full ${showSearch ? "bg-white/20 rounded-full" : "transparent rounded-full"}`}
+            className={`flex-row justify-end items-center ${showSearch ? "bg-white/20 rounded-full " : "transparent"}`}
             // className="flex-row justify-end items-center rounded-full bg-red-400"
           >
             {showSearch ? (
@@ -94,7 +94,7 @@ export default function HomeScreen() {
                 onChangeText={handleTextDebounce}
                 placeholder="Search city"
                 placeholderTextColor="lightgray"
-                className="pl-6 h-10 pb-1 flex-1 text-base text-white"
+                className="pl-6 h-16 pb-2 flex-1 text-base text-white"
               />
             ) : null}
             <TouchableOpacity
@@ -105,15 +105,15 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           {locations.length > 0 && showSearch ? (
-            <View className="absolute w-full bg-gray-300 top-16 rounded-3xl">
+            <View className="absolute w-full bg-white/70 top-16 mt-1 rounded-3xl">
               {locations.map((loc, index) => {
                 return (
                   <TouchableOpacity
                     onPress={() => handleLocation(loc)}
                     key={index}
-                    className={`flex-row items-center border-0 p-3 px-4 mb-1 ${index < locations.length - 1 ? "border-b-2" : "border-b-gray-200"}`}
+                    className={`flex-row items-center border-0 p-3 px-4 mb-1 ${index < locations.length - 1 ? "border-b" : "border-b-black/50"}`}
                   >
-                    <MapPinIcon size={20} color="gray" />
+                    <MapPinIcon size={20} color="#000000aa" />
                     <Text className="text-black text-lg ml-2">{loc?.name}, {loc?.country}</Text>
                   </TouchableOpacity>
                 );
@@ -134,7 +134,7 @@ export default function HomeScreen() {
           <View className="flex-row justify-center">
             <Image
               // source={require("@/assets/images/partlycloudy.png")}
-              source={weatherImages[current?.condition?.text]}
+              source={weatherImages[current?.condition?.text] || weatherImages['other']}
               className="w-52 h-52"
             />
           </View>
@@ -154,7 +154,7 @@ export default function HomeScreen() {
                 source={require("@/assets/icons/wind.png")}
                 className="w-6 h-6"
               />
-              <Text className="text-white text-base font-semibold">{current?.wind_km}km</Text>
+              <Text className="text-white text-base font-semibold">{current?.wind_kph}kph</Text>
             </View>
             <View className="flex flex-row gap-2 item-center">
               <Image
@@ -190,9 +190,9 @@ export default function HomeScreen() {
                 let dayName=date.toLocaleDateString('en-US', options)
                 dayName=dayName.split(',')[0]
                 return(
-                  <View className="flex justify-center items-center w-24 rounded-3xl py-3 gap-1 mr-4 bg-white/15" key={index}>
+                  <View className={`flex justify-center items-center w-24 rounded-3xl py-3 gap-1 bg-white/15 ${index>5?'mr-0':'mr-4'}`} key={index}>
                     <Image
-                      source={weatherImages[item?.day?.condition?.text]}
+                      source={weatherImages[item?.day?.condition?.text] || weatherImages['other']}
                       className="h-11 w-11"
                     />
                     <Text className="text-white">{dayName}</Text>

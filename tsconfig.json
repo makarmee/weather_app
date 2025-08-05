@@ -14,5 +14,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-, "api/weather.ts", "app/(tabs)/index.tsx"  ]
+, "api/weather.ts", "app/HomeScreen.tsx"  ]
 }
