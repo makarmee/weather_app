@@ -169,7 +169,7 @@ export default function HomeScreen() {
                 className="w-6 h-6"
               />
               <Text className="text-white text-base font-semibold">
-                6: 05 am
+                {weather?.forecast?.forecastday[0]?.astro?.sunrise}
               </Text>
             </View>
           </View>
