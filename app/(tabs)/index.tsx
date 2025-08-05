@@ -1,22 +1,64 @@
-import { useState } from "react";
+import { fetchLocations, fetchWeatherForecast } from "@/api/weather";
+import { weatherImages } from "@/constants";
+import { debounce } from "lodash";
+import { useCallback, useEffect, useState } from "react";
 import {
   Image,
   SafeAreaView,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { MagnifyingGlassIcon } from "react-native-heroicons/outline";
+import {
+  CalendarDaysIcon,
+  MagnifyingGlassIcon,
+} from "react-native-heroicons/outline";
 import { MapPinIcon } from "react-native-heroicons/solid";
+
 
 export default function HomeScreen() {
   const [showSearch, toggleSearch] = useState(false);
-  const [locations, setLocations] = useState([1, 2, 3]);
+  const [locations, setLocations] = useState([]);
+  const [weather,setWeather]=useState({})
+  
+  function handleLocation(loc: any) {
+    console.log("Selected location:", loc);
+    setLocations([])
+    toggleSearch(false)
+    fetchWeatherForecast({
+      city:loc.name,
+      days:'7',
+    }).then(data=>{
+      setWeather(data);
+      console.log('got forecast: ',data)
+    })
 
-  function handleLocation(loc: string) {
-    console.log("Selected Location:", loc);
   }
+  function handleSearch(value:any) {
+    if (value.length>2){
+      fetchLocations({city:value}).then((data:any)=>
+        setLocations(data)
+    )
+    }
+  }
+
+  useEffect(()=>{fetchMyWeatherData()},[])
+
+  async function fetchMyWeatherData (){
+    fetchWeatherForecast({
+      city:'Herat',
+      days:'7'
+    }).then(data=>{
+      setWeather(data)
+    })
+  }
+
+
+  const handleTextDebounce=useCallback(debounce(handleSearch,1200),[])
+
+  const{current,location}=weather;
 
   return (
     <View className="flex-1 relative">
@@ -33,6 +75,7 @@ export default function HomeScreen() {
           >
             {showSearch ? (
               <TextInput
+                onChangeText={handleTextDebounce}
                 placeholder="Search city"
                 placeholderTextColor="lightgray"
                 className="pl-6 h-10 pb-1 flex-1 text-base text-white"
@@ -50,17 +93,102 @@ export default function HomeScreen() {
               {locations.map((loc, index) => {
                 return (
                   <TouchableOpacity
-                    onPress={() => handleLocation(loc.toString())}
+                    onPress={() => handleLocation(loc)}
                     key={index}
-                    className={`flex-row items-center border-0 p-3 px-4 mb-1 ${index < 2 ? "border-b-2" : "border-b-gray-200"}`}
+                    className={`flex-row items-center border-0 p-3 px-4 mb-1 ${index < locations.length - 1 ? "border-b-2" : "border-b-gray-200"}`}
                   >
                     <MapPinIcon size={20} color="gray" />
-                    <Text className="text-black text-lg ml-2">Herat, AFG</Text>
+                    <Text className="text-black text-lg ml-2">{loc?.name}, {loc?.country}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
           ) : null}
+        </View>
+        {/* FORECAST */}
+        <View className="mx-4 flex flex-1 justify-around mb-2">
+          {/* Location name */}
+          <Text className="text-white text-center text-2xl font-bold">
+            {location?.name},
+            <Text className="text-lg font-semibold text-gray-300">
+              {" "+location?.country}
+            </Text>
+          </Text>
+          {/* Weather icon */}
+          <View className="flex-row justify-center">
+            <Image
+              // source={require("@/assets/images/partlycloudy.png")}
+              source={weatherImages[current?.condition?.text]}
+              className="w-52 h-52"
+            />
+          </View>
+          {/* Temperature and description */}
+          <View className="flex gap-2">
+            <Text className="text-center font-bold text-white text-6xl ml-5">
+              {current?.temp_c}&#176;
+            </Text>
+            <Text className="text-center text-white tracking-widest">
+              {current?.condition?.text}
+            </Text>
+          </View>
+          {/* Weather details */}
+          <View className="flex-row justify-between mx-4">
+            <View className="flex flex-row gap-2 item-center">
+              <Image
+                source={require("@/assets/icons/wind.png")}
+                className="w-6 h-6"
+              />
+              <Text className="text-white text-base font-semibold">{current?.wind_km}km</Text>
+            </View>
+            <View className="flex flex-row gap-2 item-center">
+              <Image
+                source={require("@/assets/icons/drop.png")}
+                className="w-6 h-6"
+              />
+              <Text className="text-white text-base font-semibold">{current?.humidity}%</Text>
+            </View>
+            <View className="flex flex-row gap-2 item-center">
+              <Image
+                source={require("@/assets/icons/sun.png")}
+                className="w-6 h-6"
+              />
+              <Text className="text-white text-base font-semibold">
+                6: 05 am
+              </Text>
+            </View>
+          </View>
+          {/* next days */}
+          <View className="mb-2 flex gap-3">
+            <View className="flex flex-row items-center mx-5 gap-2">
+              <CalendarDaysIcon size={22} color="white" />
+              <Text className="text-white text-base">Daily forecast</Text>
+            </View>
+            <ScrollView
+              horizontal
+              contentContainerStyle={{ paddingHorizontal: 15 }}
+              showsHorizontalScrollIndicator={false}
+            >
+              {weather?.forecast?.forecastday?.map((item, index)=>{
+                let date=new Date(item.date)
+                let options={weekday:'long'}
+                let dayName=date.toLocaleDateString('en-US', options)
+                dayName=dayName.split(',')[0]
+                return(
+                  <View className="flex justify-center items-center w-24 rounded-3xl py-3 gap-1 mr-4 bg-white/15" key={index}>
+                    <Image
+                      source={weatherImages[item?.day?.condition?.text]}
+                      className="h-11 w-11"
+                    />
+                    <Text className="text-white">{dayName}</Text>
+                    <Text className="text-white text-xl font-semibold">
+                      {item?.day?.avgtemp_c}&#176;
+                    </Text>
+                  </View>
+                  )
+                })}
+
+            </ScrollView>
+          </View>
         </View>
       </SafeAreaView>
     </View>
