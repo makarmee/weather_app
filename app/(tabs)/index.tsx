@@ -1,5 +1,6 @@
 import { fetchLocations, fetchWeatherForecast } from "@/api/weather";
 import { weatherImages } from "@/constants";
+import { getData, storeData } from "@/utils/asyncStorage";
 import { debounce } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -16,12 +17,14 @@ import {
   MagnifyingGlassIcon,
 } from "react-native-heroicons/outline";
 import { MapPinIcon } from "react-native-heroicons/solid";
+import * as Progress from 'react-native-progress';
 
 
 export default function HomeScreen() {
   const [showSearch, toggleSearch] = useState(false);
   const [locations, setLocations] = useState([]);
   const [weather,setWeather]=useState({})
+  const [loading,setLoading]=useState(true)
   
   function handleLocation(loc: any) {
     console.log("Selected location:", loc);
@@ -32,7 +35,9 @@ export default function HomeScreen() {
       days:'7',
     }).then(data=>{
       setWeather(data);
-      console.log('got forecast: ',data)
+      setLoading(false)
+      storeData('city',loc.name)
+      // console.log('got forecast: ',data)
     })
 
   }
@@ -47,11 +52,16 @@ export default function HomeScreen() {
   useEffect(()=>{fetchMyWeatherData()},[])
 
   async function fetchMyWeatherData (){
+    let myCity=await getData('city');
+    let city='Herat';
+    if (myCity) city=myCity;
+
     fetchWeatherForecast({
-      city:'Herat',
+      city,
       days:'7'
     }).then(data=>{
       setWeather(data)
+      setLoading(false)
     })
   }
 
@@ -67,6 +77,12 @@ export default function HomeScreen() {
         source={require("@/assets/images/bg.png")}
         className="absolute w-full h-full"
       />
+      {loading?(
+        <View className="flex-1 flex-row justify-center items-center">
+          <Progress.CircleSnail thickness={10} size={40} color='#0bb3b2'/>
+        </View>
+      ):(
+
       <SafeAreaView className="flex flex-1">
         <View style={{ height: "7%" }} className="mx-4 relative z-50">
           <View
@@ -191,6 +207,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </SafeAreaView>
+      )}
+
     </View>
   );
 }
